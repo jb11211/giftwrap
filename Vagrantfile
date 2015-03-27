@@ -41,8 +41,8 @@ Vagrant.configure('2') do |config|
 
   config.vm.provision 'shell', inline: <<-EOF
     #!/bin/bash
-    set -x
-    set -e 
+    set -xe
+
     if [ -f /etc/lsb-release ]; then
         . /etc/lsb-release
         OS=$DISTRIB_ID
@@ -56,9 +56,14 @@ Vagrant.configure('2') do |config|
         /vagrant/scripts/prepare_debian.sh
     fi
 
-    gem install --no-ri --no-rdoc fpm
+    gem list | egrep '^fpm ' || gem install --no-ri --no-rdoc fpm
+
     cd /vagrant
-    python setup.py install
+
+    if ! which giftwrap; then
+      python setup.py install
+    fi
+
     giftwrap build -m #{GIFTWRAP_MANIFEST} #{GIFTWRAP_ARGS}
 
     if [ ! -z "#{GIFTWRAP_POSTBUILD_SCRIPT}" ]; then
